@@ -16,12 +16,43 @@ function Get-LatestVersion {
     return $release.tag_name
 }
 
-$arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
-switch ($arch) {
-    "X64"   { $target = "x86_64-pc-windows-msvc" }
-    "Arm64" { $target = "x86_64-pc-windows-msvc" }
-    default { throw "Unsupported Windows architecture: $arch" }
+function Get-WindowsTarget {
+    $candidates = @()
+
+    try {
+        $runtimeArch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+        if ($null -ne $runtimeArch) {
+            $candidates += $runtimeArch.ToString()
+        }
+    }
+    catch {
+    }
+
+    if ($env:PROCESSOR_ARCHITEW6432) {
+        $candidates += $env:PROCESSOR_ARCHITEW6432
+    }
+    if ($env:PROCESSOR_ARCHITECTURE) {
+        $candidates += $env:PROCESSOR_ARCHITECTURE
+    }
+
+    $arch = ($candidates | Where-Object { $_ -and $_.Trim().Length -gt 0 } | Select-Object -First 1)
+    $normalized = if ($arch) { $arch.Trim().ToUpperInvariant() } else { "" }
+
+    switch -Regex ($normalized) {
+        "^(X64|AMD64)$" {
+            return "x86_64-pc-windows-msvc"
+        }
+        "^(ARM64|AARCH64)$" {
+            Write-Warning "ARM64 Windows detected; installing the x86_64 build."
+            return "x86_64-pc-windows-msvc"
+        }
+        default {
+            throw "Unsupported Windows architecture: $normalized"
+        }
+    }
 }
+
+$target = Get-WindowsTarget
 
 if ($Version -eq "latest") {
     $Version = Get-LatestVersion -Repo $Repo
