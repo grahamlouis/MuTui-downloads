@@ -18,6 +18,8 @@ irm https://raw.githubusercontent.com/grahamlouis/MuTui-downloads/main/install.p
 
 ## Useful Options
 
+When `VERSION` is not set, the installers resolve the latest compatible public release for your platform.
+
 ### Install a specific release
 
 macOS / Linux:
@@ -47,5 +49,28 @@ Windows PowerShell:
 $env:INSTALL_DIR="$HOME\\bin"
 irm https://raw.githubusercontent.com/grahamlouis/MuTui-downloads/main/install.ps1 | iex
 ```
+
+### Override the runtime data root
+
+macOS / Linux:
+
+```sh
+APP_ROOT="$HOME/custom-mutui-data" curl -fsSL https://raw.githubusercontent.com/grahamlouis/MuTui-downloads/main/install.sh | sh
+```
+
+Windows PowerShell:
+
+```powershell
+$env:APP_ROOT="$HOME\\custom-mutui-data"
+irm https://raw.githubusercontent.com/grahamlouis/MuTui-downloads/main/install.ps1 | iex
+```
+
+## Runtime Data Root
+
+MuTui stores project state and bundled sample assets in a per-user runtime root instead of the current working directory:
+
+- Windows: `%LOCALAPPDATA%\\MuTui`
+- macOS: `~/Library/Application Support/MuTui`
+- Linux: `${XDG_DATA_HOME:-~/.local/share}/mutui`
 
 Release assets are published automatically from the private source repository.
