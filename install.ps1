@@ -54,6 +54,43 @@ function Get-WindowsTarget {
 
 $target = Get-WindowsTarget
 
+function Normalize-PathEntry {
+    param([string]$PathEntry)
+    if (-not $PathEntry) {
+        return ""
+    }
+    return $PathEntry.Trim().TrimEnd('\').ToUpperInvariant()
+}
+
+function Ensure-PathContains {
+    param([string]$PathValue, [string]$Entry)
+    $normalizedEntry = Normalize-PathEntry $Entry
+    return (($PathValue -split ';') | ForEach-Object { Normalize-PathEntry $_ }) -contains $normalizedEntry
+}
+
+function Add-InstallDirToPath {
+    param([string]$Entry)
+
+    $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+    if (-not (Ensure-PathContains -PathValue $userPath -Entry $Entry)) {
+        $newUserPath = if ([string]::IsNullOrWhiteSpace($userPath)) {
+            $Entry
+        } else {
+            "$userPath;$Entry"
+        }
+        [Environment]::SetEnvironmentVariable("Path", $newUserPath, "User")
+        Write-Host "Added $Entry to your user PATH."
+    }
+
+    if (-not (Ensure-PathContains -PathValue $env:PATH -Entry $Entry)) {
+        $env:PATH = if ([string]::IsNullOrWhiteSpace($env:PATH)) {
+            $Entry
+        } else {
+            "$env:PATH;$Entry"
+        }
+    }
+}
+
 if ($Version -eq "latest") {
     $Version = Get-LatestVersion -Repo $Repo
 }
@@ -73,13 +110,11 @@ try {
 
     $binaryName = "$BinName.exe"
     Copy-Item -Force (Join-Path $tmpdir $binaryName) (Join-Path $InstallDir $binaryName)
+    Add-InstallDirToPath -Entry $InstallDir
 
     Write-Host ""
     Write-Host "Installed $binaryName $Version to $(Join-Path $InstallDir $binaryName)"
-    if (-not (($env:PATH -split ';') -contains $InstallDir)) {
-        Write-Host "Note: $InstallDir is not currently on PATH."
-        Write-Host "Add it to your user PATH if needed."
-    }
+    Write-Host "You can now run $BinName in this PowerShell session."
 }
 finally {
     if (Test-Path $tmpdir) {
