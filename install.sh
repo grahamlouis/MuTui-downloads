@@ -95,6 +95,9 @@ mkdir -p "$INSTALL_DIR"
 tar -xzf "$tmpdir/$archive" -C "$tmpdir"
 
 install -m 755 "$tmpdir/$BIN_NAME" "$INSTALL_DIR/$BIN_NAME"
+if [ -f "$tmpdir/mutui-setup" ]; then
+  install -m 755 "$tmpdir/mutui-setup" "$INSTALL_DIR/mutui-setup"
+fi
 
 copy_missing_assets() {
   src_dir="$1"
@@ -115,6 +118,9 @@ copy_missing_assets "$tmpdir/assets/synth/user" "$APP_ROOT/synth/user"
 
 echo
 echo "Installed ${BIN_NAME} ${VERSION} to ${INSTALL_DIR}/${BIN_NAME}"
+if [ -f "$INSTALL_DIR/mutui-setup" ]; then
+  echo "Installed macOS setup helper to ${INSTALL_DIR}/mutui-setup"
+fi
 echo "Runtime data root: ${APP_ROOT}"
 case ":$PATH:" in
   *":$INSTALL_DIR:"*) ;;

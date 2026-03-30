@@ -10,6 +10,8 @@ This repository hosts install scripts and release binaries for MuTui.
 curl -fsSL https://raw.githubusercontent.com/grahamlouis/MuTui-downloads/main/install.sh | sh
 ```
 
+On macOS, the install also provides a `mutui-setup` helper for loopback-audio setup.
+
 ### Windows PowerShell
 
 ```powershell
